@@ -9,6 +9,16 @@ def create_tables() -> None:
     # Enable foreign key constraint
     cur.execute('PRAGMA foreign_keys = ON;')
 
+
+    # Flag Table 
+    # To prevent redundant insertion
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS Init_Flags (
+            key TEXT PRIMARY KEY,
+            value TEXT
+        );
+    ''')
+
     # PERSON
     cur.execute('''
         CREATE TABLE IF NOT EXISTS Person (

@@ -1,8 +1,8 @@
 def get_custom_query(table_name):
     
-    # 1. MEMBER Table
+    # MEMBER Table
     if table_name == "Member":
-        return """
+        return ("""
         SELECT 
             m.member_id, 
             p.first_name, 
@@ -11,11 +11,11 @@ def get_custom_query(table_name):
             m.member_status 
         FROM Member m
         JOIN Person p ON m.person_id = p.id
-        """
+        """)
 
-    # 2. TRAINER Table
+    # TRAINER Table
     elif table_name == "Trainer":
-        return """
+        return ("""
         SELECT 
             t.trainer_id, 
             p.first_name || ' ' || p.last_name as Trainer_Name,
@@ -24,11 +24,11 @@ def get_custom_query(table_name):
             t.trainer_status 
         FROM Trainer t
         JOIN Person p ON t.person_id = p.id
-        """
+        """)
 
-    # 3. MEMBERSHIP Table
+    # MEMBERSHIP Table
     elif table_name == "Membership":
-        return """
+        return ("""
         SELECT 
             ms.membership_id,
             p.first_name || ' ' || p.last_name as Member_Name, -- İsim
@@ -41,11 +41,11 @@ def get_custom_query(table_name):
         JOIN Member m ON ms.member_id = m.member_id
         JOIN Person p ON m.person_id = p.id
         JOIN Membership_Type mt ON ms.membership_type_id = mt.membership_type_id
-        """
+        """)
 
-    # 4. CLASS_SESSION Table
+    # CLASS_SESSION Table
     elif table_name == "Class_Session":
-        return """
+        return ("""
         SELECT 
             cs.class_session_id,
             c.class_name,
@@ -55,11 +55,11 @@ def get_custom_query(table_name):
             cs.capacity
         FROM Class_Session cs
         JOIN Class c ON cs.class_id = c.class_id
-        """
+        """)
         
-    # 5. PAYMENT Table
+    # PAYMENT Table
     elif table_name == "Payment":
-        return """
+        return ("""
         SELECT
             pay.payment_id,
             p.first_name || ' ' || p.last_name as Member_Name,
@@ -69,11 +69,11 @@ def get_custom_query(table_name):
         FROM Payment pay
         JOIN Member m ON pay.member_id = m.member_id
         JOIN Person p ON m.person_id = p.id
-        """
+        """)
 
-    # 6. PHONE Table
+    # PHONE Table
     elif table_name == "Phone":
-        return """
+        return ("""
         SELECT
             ph.phone_id,
             p.first_name || ' ' || p.last_name as Owner_Name,
@@ -82,7 +82,62 @@ def get_custom_query(table_name):
         FROM Phone ph
         LEFT JOIN Person p ON ph.owner_id = p.id
         WHERE ph.owner_type = 'person'
-        """
+        """)
+
+    # TRAINER_SPECIALIZATION Table
+    elif table_name == "Trainer_Specialization":
+        return ("""
+        SELECT 
+            p.first_name || ' ' || p.last_name as Trainer_Name, -- Antrenör İsmi
+            s.name as Specialization_Area -- Uzmanlık Alanı (Örn: Yoga, Pilates)
+        FROM Trainer_Specialization ts
+        JOIN Trainer t ON ts.trainer_id = t.trainer_id
+        JOIN Person p ON t.person_id = p.id
+        JOIN Specialization s ON ts.specialization_id = s.specialization_id
+        """)
+
+    # CONTACT Table
+    elif table_name == "Contact":
+        return ("""
+        SELECT 
+            c.contact_id,
+            p.first_name || ' ' || p.last_name as Member_Name,
+            c.contact_name as Emergency_Contact,
+            c.relationship,
+            GROUP_CONCAT(ph.phone_number, ', ') as Contact_Phones
+        FROM Contact c
+        JOIN Person p ON c.person_id = p.id
+        LEFT JOIN Phone ph ON c.contact_id = ph.owner_id AND ph.owner_type = 'contact'
+        GROUP BY c.contact_id
+        """)
+
+    elif table_name == "Attends":
+        return ("""
+        SELECT 
+            p.first_name || ' ' || p.last_name as Member_Name, -- Katılan Üye
+            c.class_name as Class, -- Dersin Adı
+            cs.start_time as Session_Time, -- Ders Saati
+            cs.duration || ' dk' as Duration -- Süre
+        FROM Attends a
+        JOIN Member m ON a.member_id = m.member_id
+        JOIN Person p ON m.person_id = p.id
+        JOIN Class_Session cs ON a.class_session_id = cs.class_session_id
+        JOIN Class c ON cs.class_id = c.class_id
+        """)
+
+    elif table_name == "Teaches":
+        return ("""
+        SELECT 
+            p.first_name || ' ' || p.last_name as Trainer_Name, -- Eğitmen Adı
+            c.class_name as Class, -- Dersin Adı
+            cs.start_time as Session_Time, -- Başlangıç Saati
+            cs.duration || ' dk' as Duration -- Süre
+        FROM Teaches t
+        JOIN Trainer tr ON t.trainer_id = tr.trainer_id
+        JOIN Person p ON tr.person_id = p.id
+        JOIN Class_Session cs ON t.class_session_id = cs.class_session_id
+        JOIN Class c ON cs.class_id = c.class_id
+        """)
 
     else:
-        return f"SELECT * FROM {table_name}"
+        return (f"SELECT * FROM {table_name}")

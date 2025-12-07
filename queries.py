@@ -1,6 +1,9 @@
 def get_custom_query(table_name):
-    
-    # MEMBER Table
+    """
+    Return a formatted SQL query for displaying a specific table.
+    Joins related tables to show comprehensive information for each entity.
+    """
+    # MEMBER Table - Display member information with personal details
     if table_name == "Member":
         return ("""
         SELECT 
@@ -13,7 +16,7 @@ def get_custom_query(table_name):
         JOIN Person p ON m.person_id = p.id
         """)
 
-    # TRAINER Table
+    # TRAINER Table - Display trainer details with qualifications
     elif table_name == "Trainer":
         return ("""
         SELECT 
@@ -31,8 +34,8 @@ def get_custom_query(table_name):
         return ("""
         SELECT 
             ms.membership_id,
-            p.first_name || ' ' || p.last_name as Member_Name, -- İsim
-            mt.name as Membership_Type, -- Gold, Silver vb.
+            p.first_name || ' ' || p.last_name as Member_Name,
+            mt.name as Membership_Type,
             mt.price,
             ms.is_active,
             ms.start_date,
@@ -43,7 +46,7 @@ def get_custom_query(table_name):
         JOIN Membership_Type mt ON ms.membership_type_id = mt.membership_type_id
         """)
 
-    # CLASS_SESSION Table
+    # CLASS_SESSION Table - Display scheduled class sessions with timing and capacity
     elif table_name == "Class_Session":
         return ("""
         SELECT 
@@ -57,7 +60,7 @@ def get_custom_query(table_name):
         JOIN Class c ON cs.class_id = c.class_id
         """)
         
-    # PAYMENT Table
+    # PAYMENT Table - Display member payment records with method and amount
     elif table_name == "Payment":
         return ("""
         SELECT
@@ -71,7 +74,7 @@ def get_custom_query(table_name):
         JOIN Person p ON m.person_id = p.id
         """)
 
-    # PHONE Table
+    # PHONE Table - Display contact numbers for members and their emergency contacts
     elif table_name == "Phone":
         return ("""
         SELECT
@@ -88,15 +91,15 @@ def get_custom_query(table_name):
     elif table_name == "Trainer_Specialization":
         return ("""
         SELECT 
-            p.first_name || ' ' || p.last_name as Trainer_Name, -- Antrenör İsmi
-            s.name as Specialization_Area -- Uzmanlık Alanı (Örn: Yoga, Pilates)
+            p.first_name || ' ' || p.last_name as Trainer_Name,
+            s.name as Specialization_Area
         FROM Trainer_Specialization ts
         JOIN Trainer t ON ts.trainer_id = t.trainer_id
         JOIN Person p ON t.person_id = p.id
         JOIN Specialization s ON ts.specialization_id = s.specialization_id
         """)
 
-    # CONTACT Table
+    # CONTACT Table - Display emergency contact information with phone numbers
     elif table_name == "Contact":
         return ("""
         SELECT 
@@ -112,12 +115,13 @@ def get_custom_query(table_name):
         """)
 
     elif table_name == "Attends":
+        # Display class attendance records showing which members attended which sessions
         return ("""
         SELECT 
-            p.first_name || ' ' || p.last_name as Member_Name, -- Katılan Üye
-            c.class_name as Class, -- Dersin Adı
-            cs.start_time as Session_Time, -- Ders Saati
-            cs.duration || ' dk' as Duration -- Süre
+            p.first_name || ' ' || p.last_name as Member_Name,
+            c.class_name as Class,
+            cs.start_time as Session_Time,
+            cs.duration || ' min' as Duration
         FROM Attends a
         JOIN Member m ON a.member_id = m.member_id
         JOIN Person p ON m.person_id = p.id
@@ -126,17 +130,36 @@ def get_custom_query(table_name):
         """)
 
     elif table_name == "Teaches":
+        # Display teaching assignments showing which trainers teach which sessions
         return ("""
         SELECT 
-            p.first_name || ' ' || p.last_name as Trainer_Name, -- Eğitmen Adı
-            c.class_name as Class, -- Dersin Adı
-            cs.start_time as Session_Time, -- Başlangıç Saati
-            cs.duration || ' dk' as Duration -- Süre
+            p.first_name || ' ' || p.last_name as Trainer_Name,
+            c.class_name as Class,
+            cs.start_time as Session_Time,
+            cs.duration || ' min' as Duration
         FROM Teaches t
         JOIN Trainer tr ON t.trainer_id = tr.trainer_id
         JOIN Person p ON tr.person_id = p.id
         JOIN Class_Session cs ON t.class_session_id = cs.class_session_id
         JOIN Class c ON cs.class_id = c.class_id
+        """)
+    
+    elif table_name == "Check_in":
+        # Display member check-in/check-out records for class attendance tracking
+        return ("""
+        SELECT 
+                ci.checkin_id,
+                p.first_name || ' ' || p.last_name as Member_Name,
+                c.class_name as Class,
+                cs.start_time as Session_Scheduled,
+                ci.checkin_time,
+                ci.checkout_time
+        FROM Check_in ci
+        JOIN Member m ON ci.member_id = m.member_id
+        JOIN Person p ON m.person_id = p.id
+        JOIN Class_Session cs ON ci.class_session_id = cs.class_session_id
+        JOIN Class c ON cs.class_id = c.class_id
+        ORDER BY ci.checkin_time DESC
         """)
 
     else:

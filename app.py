@@ -5,31 +5,39 @@ from database import DATABASE_NAME, create_tables
 from insert_data import insert_sample_data 
 from queries import get_custom_query
 from insertion import render_insert_page
-
+from update import render_update_page
+from delete import render_delete_page
 
 conn = sqlite3.connect(DATABASE_NAME)
 cur = conn.cursor()
 
+# Create a flag table to track initialization status
 cur.execute('''CREATE TABLE IF NOT EXISTS Init_Flags (
     key TEXT PRIMARY KEY,
     value TEXT
 )''')
 
+# Check if sample data has already been inserted
 cur.execute("SELECT value FROM Init_Flags WHERE key = 'sample_data'")
 result = cur.fetchone()
 
+# If no sample data exists, create tables and insert sample data
 if result is None:
     from database import create_tables
     from insert_data import insert_sample_data
 
     create_tables()
     insert_sample_data()
+    # Mark that sample data has been inserted
     cur.execute("INSERT INTO Init_Flags (key, value) VALUES (?, ?)", ('sample_data', 'true'))
     conn.commit()
 
 conn.close()
 
-# === Streamlit UI Config ===
+# ============================================
+# Streamlit UI Configuration
+# ============================================
+
 PAGE_CONFIG_HEADER : str = "Gym Management"
 PAGE_CONFIG_LAYOUT : str = "wide"
 MAIN_PAGE_TITLE : str = "🏋️ Gym Management Panel"
@@ -38,13 +46,17 @@ SIDEBAR_HEADER : str = "Navigation"
 st.set_page_config(page_title=PAGE_CONFIG_HEADER, layout=PAGE_CONFIG_LAYOUT)
 st.title(MAIN_PAGE_TITLE)
 
+# Create sidebar navigation
 st.sidebar.header(SIDEBAR_HEADER)
 menu : str = st.sidebar.radio(
     "Select Action",
-    ["Home", "View Tables", "Insertion", "Update", "Delete", "Membership & Classes (JOIN)"]
+    ["Home", "View Tables", "Insertion", "Update", "Delete"]
 )
 
-# === Menu Pages ===
+# ============================================
+# Display selected page
+# ============================================
+
 if menu == "Home":
     st.markdown("""
     ### Welcome!
@@ -79,5 +91,8 @@ elif menu == "View Tables":
 elif menu == "Insertion":
     render_insert_page()
 
-elif menu == "Membership & Classes (JOIN)":
-    st.info("To be continued..")
+elif menu == "Update":
+    render_update_page()
+
+elif menu == "Delete":
+    render_delete_page()

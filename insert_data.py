@@ -2,12 +2,17 @@ import sqlite3
 from database import DATABASE_NAME
 
 def insert_sample_data():
+    """
+    Populate the database with sample data for testing and demonstration.
+    Creates sample persons, members, trainers, classes, and related records.
+    """
     conn = sqlite3.connect(DATABASE_NAME)
     cur = conn.cursor()
 
+    # Enable foreign key constraints to maintain data integrity
     cur.execute("PRAGMA foreign_keys = ON;")
 
-    # === PERSON ===
+    # Insert person records - Base data for all individuals (members, trainers, etc.)
     people = [
         ("Ali", "Yıldız", "1990-01-01", "ali@gmail.com", "Istanbul", "Mecidiyeköy", "34387"),
         ("Zeynep", "Arslan", "1988-02-14", "zeynep@gmail.com", "Ankara", "Kızılay", "06000"),
@@ -16,13 +21,8 @@ def insert_sample_data():
         ("Ece", "Aksoy", "1987-09-19", "ece@gmail.com", "Adana", "Çukurova", "01000")
     ]
 
-    people_phones = [
-        ['+90555{0:07d}', 'mobile'],
-        ['+90212{0:07d}', 'work'],
-        ['+90850{0:07d}', 'home']
-    ]
 
-
+    # Insert each person with their contact information
     for i, person in enumerate(people, start=1):
         cur.execute('''
             INSERT OR IGNORE INTO Person (first_name, last_name, birth_date, email, city, street, zip)
@@ -34,12 +34,14 @@ def insert_sample_data():
             VALUES (?, ?, ?, ?)
         ''', ('person', i, f'+90555{i:07d}', 'mobile'))
 
+        # Create emergency contact for each person
         contact_name = f"{person[0]}'s contact"
         cur.execute('''
             INSERT OR IGNORE INTO Contact (person_id, contact_name, relationship)
             VALUES (?, ?, ?)
         ''', (i, contact_name, 'sibling'))
 
+        # Add emergency contact phone number
         contact_id = cur.lastrowid
 
         cur.execute('''
@@ -112,4 +114,4 @@ def insert_sample_data():
     conn.commit()
     conn.close()
 
-    print("Sample data inserted.")
+    print("Sample data inserted successfully.")

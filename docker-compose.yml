@@ -1,0 +1,9 @@
+services:
+  gym-app:
+    build: .
+    container_name: gym_management_system
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./app:/app
+    restart: unless-stopped

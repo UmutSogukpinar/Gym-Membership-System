@@ -6,39 +6,117 @@ A lightweight, interactive, and extendable SQLite + Streamlit application for ma
 
 This project provides a simple but powerful management interface built with Streamlit and SQLite3.
 
-You can:
-
-* View all tables in the database
-*Insert new records
-* Update existing data
-* Delete entries
-* Perform JOIN operations to see combined membership & class data
-* The interface is user-friendly and runs entirely in your browser.
+**Key Features:**
+* 📋 **View Tables:** Browse all database records instantly.
+* ➕ **Insert Data:** Register new members, trainers, and classes via forms.
+* 🔄 **Update & Delete:** Modify or remove existing records easily.
+* 🔗 **Complex Queries:** Perform JOIN operations to analyze membership trends.
+* 🐳 **Dockerized:** Runs smoothly in a containerized environment.
 
 ## Prerequisites
 
-Before running the project with Docker, make sure your system meets the following requirements:
+Before running the project, make sure your system meets the following requirements:
 
-1. Docker Desktop installed  
-   - Provides the Docker CLI and Docker Engine
+1. **Docker Desktop installed** - Provides the Docker CLI and Docker Engine.
+2. **Virtualization enabled** (Intel VT-x / AMD-V)
+   - Required to run Linux-based containers.
+3. **WSL2 enabled** (for Windows Home users)
+   - Docker uses a lightweight Linux kernel under the hood.
+4. **Make** (Optional but highly recommended)
+   - A build automation tool to simplify running commands.
+   - *Windows users:* Can install via Chocolatey (`choco install make`) or use inside WSL.
+   - *Linux/Mac users:* Usually pre-installed.
 
-2. Virtualization enabled (Intel VT-x / AMD-V)
-   - Required to run Linux-based containers
+Without these prerequisites, the application may not start correctly.
 
-3. WSL2 enabled (for Windows Home users)
-   - Docker uses a lightweight Linux kernel under the hood
+---
 
-4. 64-bit CPU + minimum 4GB RAM
-   - Ensures stable container performance
+## Quick Start
 
-Without these prerequisites, Docker containers cannot start.
+We have included a `Makefile` to simplify common Docker tasks. You don't need to memorize long Docker commands! This file acts as a control center for the project.
 
-
-## 🐳 Run with Docker
-
-You can run the app fully containerized using Docker.
-
+### 1. View Help Menu
+If you are unsure which command to run, list all available shortcuts directly in your terminal.
 ```bash
-docker compose up --build
+make
+# OR
+make info
 ```
 
+### 2. Build the Docker Image
+Before running the application, build the Docker image from the Dockerfile.
+```bash
+make build
+```
+
+### 3. Start the Application
+Run the application in the background (detached mode).
+```bash
+make up
+```
+Once started, the application will be available at: **http://localhost:8501**
+
+### 4. View Live Logs
+To monitor what's happening in the container in real-time:
+```bash
+make logs
+```
+This is useful for debugging and tracking application events.
+
+### 5. Stop the Application
+When you're done, stop and remove the running containers:
+```bash
+make down
+```
+
+### 6. Clean Up Docker Resources
+To remove unused Docker images, containers, and networks (to save disk space):
+```bash
+make clean
+```
+**Warning:** This will delete unused objects. Use with caution.
+
+---
+
+## Makefile Commands Summary
+
+| Command | Description |
+|---------|-------------|
+| `make info` | Display all available commands |
+| `make build` | Build the Docker image |
+| `make up` | Start the application (background) |
+| `make down` | Stop and remove containers |
+| `make logs` | View live container logs |
+| `make clean` | Prune unused Docker objects |
+
+---
+
+## Project Structure
+
+```
+Gym-Membership-System/
+├── app/
+│   ├── app.py              # Main Streamlit application
+│   ├── database.py         # Database initialization and setup
+│   ├── insertion.py        # Insert/Add records functionality
+│   ├── queries.py          # View/Query records functionality
+│   ├── update.py           # Update records functionality
+│   ├── delete.py           # Delete records functionality
+│   ├── insert_data.py      # Sample data insertion
+│   └── insertion.py        # Additional insertion utilities
+├── Dockerfile             # Docker container configuration
+├── docker-compose.yml     # Multi-container setup
+├── Makefile              # Command shortcuts
+├── requirements.txt      # Python dependencies
+└── README.md            # This file
+```
+
+---
+
+## Support & Troubleshooting
+
+If you encounter any issues:
+1. Ensure Docker Desktop is running
+2. Check that port 8501 is not in use
+3. Run `make logs` to see detailed error messages
+4. Verify that all prerequisites are installed

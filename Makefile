@@ -10,7 +10,6 @@ info:
 	@echo "  make up      → Start the application (detached)"
 	@echo "  make down    → Stop and remove containers"
 	@echo "  make logs    → Follow live container logs"
-	@echo "  make shell   → Enter the gym-app container shell"
 	@echo "  make clean   → Prune unused Docker objects"
 	@echo ""
 
@@ -30,10 +29,6 @@ down:
 # View live logs from the container
 logs:
 	docker-compose logs -f
-
-# Enter the container shell (useful for debugging DB or scripts)
-shell:
-	docker-compose exec gym-app /bin/bash
 
 # Clean up docker system - Use with caution
 clean:

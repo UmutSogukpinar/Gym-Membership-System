@@ -6,7 +6,6 @@ from datetime import datetime
 def get_options(query):
     """
     Execute a query and return results as a dictionary mapping display names to IDs.
-    Used for populating dropdown menus with database values.
     """
     conn = sqlite3.connect(DATABASE_NAME)
     cur = conn.cursor()
@@ -18,12 +17,10 @@ def get_options(query):
 
 def render_insert_page():
     """
-    Main page for inserting new records into the gym management system.
-    Provides options to register members, trainers, classes, and manage memberships.
+    Main page for inserting new records with STRICT INPUT VALIDATION.
     """
     st.header("Record Registration")
     
-    # Menu options for different registration types
     menu_options = [
         "New Member Registration", 
         "New Trainer Registration", 
@@ -36,15 +33,13 @@ def render_insert_page():
     
     choice = st.selectbox("Select Registration Type", menu_options)
 
-    # Database connection for all insertion operations
     conn = sqlite3.connect(DATABASE_NAME)
     cur = conn.cursor()
     cur.execute("PRAGMA foreign_keys = ON;")
 
     # ==========================================
-    # NEW MEMBER REGISTRATION
+    # 1. NEW MEMBER REGISTRATION
     # ==========================================
-    # Form to register a new gym member with personal, contact, and emergency information
     if choice == "New Member Registration":
         st.subheader("Member Details")
         with st.form("add_member_full"):
@@ -62,7 +57,7 @@ def render_insert_page():
             street = st.text_input("Street Address *")
             zip_code = st.text_input("Zip Code *")
 
-            st.markdown("##### Membership Status Initializer")
+            st.markdown("##### Membership Status")
             status = st.selectbox("Member Status", ["active", "inactive", "pending"])
 
             st.markdown("##### Emergency Contact")
@@ -74,41 +69,43 @@ def render_insert_page():
             submitted = st.form_submit_button("Register Member")
 
             if submitted:
-                if f_name and l_name and phone:
+                # Validation List: All these must be True (not empty strings)
+                required_fields = [f_name, l_name, email, phone, city, street, zip_code, contact_name, relationship, contact_phone]
+                
+                if all(required_fields):
                     try:
-                        # Insert base person record
-                        cur.execute('''INSERT INTO Person (first_name, last_name, birth_date, email, city, street, zip) VALUES (?, ?, ?, ?, ?, ?, ?)''', 
+                        cur.execute('''INSERT INTO Person (first_name, last_name, birth_date, email, city, street, zip) 
+                                       VALUES (?, ?, ?, ?, ?, ?, ?)''', 
                                     (f_name, l_name, str(birth_date), email, city, street, zip_code))
                         new_person_id = cur.lastrowid
                         
-                        # Add personal phone number
-                        cur.execute('''INSERT INTO Phone (owner_type, owner_id, phone_number, type) VALUES (?, ?, ?, ?)''', 
+                        cur.execute('''INSERT INTO Phone (owner_type, owner_id, phone_number, type) 
+                                       VALUES (?, ?, ?, ?)''', 
                                     ('person', new_person_id, phone, 'mobile'))
 
-                        # Create member record
-                        cur.execute('''INSERT INTO Member (person_id, member_status) VALUES (?, ?)''', (new_person_id, status))
+                        cur.execute('''INSERT INTO Member (person_id, member_status) VALUES (?, ?)''', 
+                                    (new_person_id, status))
 
-                        # Add emergency contact information
-                        cur.execute('''INSERT INTO Contact (person_id, contact_name, relationship) VALUES (?, ?, ?)''', 
+                        cur.execute('''INSERT INTO Contact (person_id, contact_name, relationship) 
+                                       VALUES (?, ?, ?)''', 
                                     (new_person_id, contact_name, relationship))
                         new_contact_id = cur.lastrowid
 
-                        # Add emergency contact phone number
-                        cur.execute('''INSERT INTO Phone (owner_type, owner_id, phone_number, type) VALUES (?, ?, ?, ?)''', 
+                        cur.execute('''INSERT INTO Phone (owner_type, owner_id, phone_number, type) 
+                                       VALUES (?, ?, ?, ?)''', 
                                     ('contact', new_contact_id, contact_phone, 'mobile'))
 
                         conn.commit()
                         st.success(f"Member {f_name} {l_name} added successfully!")
                     except Exception as e:
-                        st.error(f"Error: {e}")
+                        st.error(f"Database Error: {e}")
                 else:
-                    st.warning("Please fill required fields.")
+                    st.error("⚠️ Registration Failed: All fields marked with * are required.")
 
     # ==========================================
-    # NEW TRAINER REGISTRATION
+    # 2. NEW TRAINER REGISTRATION
     # ==========================================
     elif choice == "New Trainer Registration":
-        # Form to register a new trainer with professional qualifications
         st.subheader("Trainer Details")
         with st.form("add_trainer_full"):
             st.markdown("##### Personal Information")
@@ -134,29 +131,34 @@ def render_insert_page():
             submitted = st.form_submit_button("Register Trainer")
 
             if submitted:
-                if f_name and l_name:
+                # Validation
+                required_fields = [f_name, l_name, email, phone, city, street, zip_code, specialization]
+
+                if all(required_fields):
                     try:
-                        # Insert base person record
-                        cur.execute('''INSERT INTO Person (first_name, last_name, birth_date, email, city, street, zip) VALUES (?, ?, ?, ?, ?, ?, ?)''', 
+                        cur.execute('''INSERT INTO Person (first_name, last_name, birth_date, email, city, street, zip) 
+                                       VALUES (?, ?, ?, ?, ?, ?, ?)''', 
                                     (f_name, l_name, str(birth_date), email, city, street, zip_code))
                         new_person_id = cur.lastrowid
                         
-                        # Add trainer phone number
-                        cur.execute('''INSERT INTO Phone (owner_type, owner_id, phone_number, type) VALUES (?, ?, ?, ?)''', 
+                        cur.execute('''INSERT INTO Phone (owner_type, owner_id, phone_number, type) 
+                                       VALUES (?, ?, ?, ?)''', 
                                     ('person', new_person_id, phone, 'mobile'))
 
-                        cur.execute('''INSERT INTO Trainer (person_id, specialization, hire_date, trainer_status) VALUES (?, ?, ?, ?)''', 
+                        cur.execute('''INSERT INTO Trainer (person_id, specialization, hire_date, trainer_status) 
+                                       VALUES (?, ?, ?, ?)''', 
                                     (new_person_id, specialization, str(hire_date), t_status))
 
                         conn.commit()
                         st.success(f"Trainer {f_name} {l_name} added successfully!")
                     except Exception as e:
-                        st.error(f"Error: {e}")
+                        st.error(f"Database Error: {e}")
+                else:
+                    st.error("⚠️ Registration Failed: All fields marked with * are required.")
 
     # ==========================================
-    # CREATE NEW CLASS
+    # 3. CREATE NEW CLASS
     # ==========================================
-    # Form to create a new class type/template (e.g., Yoga, Pilates)
     elif choice == "Create New Class":
         st.subheader("Define a New Class Type")
         with st.form("add_class_simple"):
@@ -165,18 +167,19 @@ def render_insert_page():
             submitted = st.form_submit_button("Create Class")
 
             if submitted:
-                if c_name:
+                if c_name and desc:
                     try:
                         cur.execute("INSERT INTO Class (class_name, description) VALUES (?, ?)", (c_name, desc))
                         conn.commit()
                         st.success(f"Class '{c_name}' created!")
                     except Exception as e:
                         st.error(f"Error: {e}")
+                else:
+                    st.error("⚠️ Both Class Name and Description are required.")
 
     # ==========================================
-    # SCHEDULE CLASS SESSION
+    # 4. SCHEDULE CLASS SESSION
     # ==========================================
-    # Form to schedule specific session instances for classes with date, time, and capacity
     elif choice == "Schedule Class Session":
         st.subheader("Schedule a Session")
         st.info("Assign a specific time and capacity to a Class Type.")
@@ -200,40 +203,41 @@ def render_insert_page():
                 submitted = st.form_submit_button("Schedule Session")
 
                 if submitted:
-                    start_datetime = f"{date} {time_start}"
-                    
-                    class_id = class_map[selected_class_name]
-                    
-                    try:
-                        cur.execute('''
-                            INSERT INTO Class_Session (class_id, start_time, end_time, capacity, duration)
-                            VALUES (?, ?, ?, ?, ?)
-                        ''', (class_id, start_datetime, "Calculated based on duration", capacity, duration))
-                        conn.commit()
-                        st.success("Class Session Scheduled Successfully!")
-                    except Exception as e:
-                        st.error(f"Database Error: {e}")
+                    # Date/Time are usually returned as objects by Streamlit, so they are rarely empty,
+                    # but we should ensure capacity and duration are logical.
+                    if duration > 0 and capacity > 0:
+                        start_datetime = f"{date} {time_start}"
+                        class_id = class_map[selected_class_name]
+                        
+                        try:
+                            cur.execute('''
+                                INSERT INTO Class_Session (class_id, start_time, end_time, capacity, duration)
+                                VALUES (?, ?, ?, ?, ?)
+                            ''', (class_id, start_datetime, "Calculated based on duration", capacity, duration))
+                            conn.commit()
+                            st.success("Class Session Scheduled Successfully!")
+                        except Exception as e:
+                            st.error(f"Database Error: {e}")
+                    else:
+                        st.error("⚠️ Invalid Capacity or Duration.")
 
     # ==========================================
-    # ASSIGN MEMBERSHIP
+    # 5. ASSIGN MEMBERSHIP
     # ==========================================
-    # Form to assign a membership package (Monthly, Yearly, etc.) to a member with validity dates
     elif choice == "Assign Membership":
         st.subheader("Assign Membership Package")
         
-        # Fetch members and membership packages
         member_query = """
             SELECT p.first_name || ' ' || p.last_name || ' (ID: ' || m.member_id || ')', m.member_id
             FROM Member m JOIN Person p ON m.person_id = p.id
         """
         member_map = get_options(member_query)
-
         type_map = get_options("SELECT name || ' - ' || price || ' TL', membership_type_id FROM Membership_Type")
 
         if not member_map:
-            st.error("No members found.")
+            st.error("No members found. Register a member first.")
         elif not type_map:
-            st.error("No membership types found.")
+            st.error("No membership types found. Add them to DB first.")
         else:
             with st.form("assign_membership"):
                 selected_member = st.selectbox("Select Member", list(member_map.keys()))
@@ -248,9 +252,8 @@ def render_insert_page():
                 submitted = st.form_submit_button("Assign Membership")
 
                 if submitted:
-                    # Validate date logic
                     if end_d < start_d:
-                        st.error("Error: End date cannot be before start date!")
+                        st.error("⚠️ Error: End date cannot be before start date!")
                     else:
                         m_id = member_map[selected_member]
                         mt_id = type_map[selected_type]
@@ -261,14 +264,13 @@ def render_insert_page():
                                 VALUES (?, ?, ?, ?, ?)
                             ''', (m_id, mt_id, 1 if is_active else 0, str(start_d), str(end_d)))
                             conn.commit()
-                            st.success(f"Membership assigned successfully! ({start_d} to {end_d})")
+                            st.success(f"Membership assigned successfully!")
                         except Exception as e:
                             st.error(f"Error: {e}")
 
     # ==========================================
-    # RECORD PAYMENT
+    # 6. RECORD PAYMENT
     # ==========================================
-    # Form to record member payments (Credit Card, Cash, Bank Transfer)
     elif choice == "Record Payment":
         st.subheader("Process Payment")
 
@@ -288,35 +290,34 @@ def render_insert_page():
                 submitted = st.form_submit_button("Record Payment")
                 
                 if submitted:
-                    m_id = member_map[selected_member]
-                    try:
-                        cur.execute('''
-                            INSERT INTO Payment (member_id, payment_date, method, amount)
-                            VALUES (?, ?, ?, ?)
-                        ''', (m_id, str(p_date), method, amount))
-                        conn.commit()
-                        st.success(f"Payment of {amount} TL recorded!")
-                    except Exception as e:
-                        st.error(f"Error: {e}")
+                    # Enforce amount > 0
+                    if amount > 0:
+                        m_id = member_map[selected_member]
+                        try:
+                            cur.execute('''
+                                INSERT INTO Payment (member_id, payment_date, method, amount)
+                                VALUES (?, ?, ?, ?)
+                            ''', (m_id, str(p_date), method, amount))
+                            conn.commit()
+                            st.success(f"Payment of {amount} TL recorded!")
+                        except Exception as e:
+                            st.error(f"Error: {e}")
+                    else:
+                        st.error("⚠️ Payment amount must be greater than 0.")
         else:
-            st.warning("No members available.")
+            st.warning("No members available to receive payment from.")
 
     # ==========================================
-    # TRAINER SPECIALIZATION
+    # 7. ASSIGN TRAINER SPECIALIZATION
     # ==========================================
-    # Form to assign specialization areas (Yoga, Pilates, HIIT) to trainers
     elif choice == "Assign Trainer Specialization":
         st.subheader("Assign Specialization to Trainer")
         
-        # Retrieve list of trainers for assignment
-        # Trainer Map
         trainer_query = """
             SELECT p.first_name || ' ' || p.last_name, t.trainer_id
             FROM Trainer t JOIN Person p ON t.person_id = p.id
         """
         trainer_map = get_options(trainer_query)
-        
-        # Specialization Map (Tablo varsa)
         spec_map = get_options("SELECT name, specialization_id FROM Specialization")
 
         if not trainer_map:
@@ -331,16 +332,21 @@ def render_insert_page():
                 submitted = st.form_submit_button("Assign")
                 
                 if submitted:
-                    t_id = trainer_map[t_name]
-                    s_id = spec_map[s_name]
-                    
-                    try:
-                        cur.execute("INSERT INTO Trainer_Specialization (trainer_id, specialization_id) VALUES (?, ?)", (t_id, s_id))
-                        conn.commit()
-                        st.success(f"Assigned {s_name} to {t_name}")
-                    except sqlite3.IntegrityError:
-                        st.error("This trainer already has this specialization.")
-                    except Exception as e:
-                        st.error(f"Error: {e}")
+                    # Select boxes always return a value if the list is not empty,
+                    # but handling the case just in case.
+                    if t_name and s_name:
+                        t_id = trainer_map[t_name]
+                        s_id = spec_map[s_name]
+                        
+                        try:
+                            cur.execute("INSERT INTO Trainer_Specialization (trainer_id, specialization_id) VALUES (?, ?)", (t_id, s_id))
+                            conn.commit()
+                            st.success(f"Assigned {s_name} to {t_name}")
+                        except sqlite3.IntegrityError:
+                            st.error("⚠️ This trainer already has this specialization.")
+                        except Exception as e:
+                            st.error(f"Error: {e}")
+                    else:
+                         st.error("⚠️ Missing selections.")
 
     conn.close()

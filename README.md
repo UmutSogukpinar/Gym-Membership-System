@@ -96,19 +96,19 @@ make clean
 ```
 Gym-Membership-System/
 ├── app/
-│   ├── app.py              # Main Streamlit application
-│   ├── database.py         # Database initialization and setup
-│   ├── insertion.py        # Insert/Add records functionality
-│   ├── queries.py          # View/Query records functionality
-│   ├── update.py           # Update records functionality
-│   ├── delete.py           # Delete records functionality
-│   ├── insert_data.py      # Sample data insertion
-│   └── insertion.py        # Additional insertion utilities
-├── Dockerfile             # Docker container configuration
-├── docker-compose.yml     # Multi-container setup
-├── Makefile              # Command shortcuts
-├── requirements.txt      # Python dependencies
-└── README.md            # This file
+│   ├── app.py
+│   ├── database.py
+│   ├── insertion.py
+│   ├── queries.py
+│   ├── update.py
+│   ├── delete.py
+│   ├── insert_data.py
+│   └── insertion.py
+├── Dockerfile
+├── docker-compose.yml
+├── Makefile
+├── requirements.txt
+└── README.md
 ```
 
 ---

@@ -3,6 +3,7 @@ import sqlite3
 from database import DATABASE_NAME
 from insertion import get_options
 
+
 def render_delete_page():
     """
     Page for deleting records from the gym management system.
@@ -19,13 +20,13 @@ def render_delete_page():
         "Cancel Class Session",
         "Remove Membership Package"
     ]
-    
+
     choice = st.selectbox("Select Deletion Type", menu_options)
 
     # Database connection for deletion operations
     conn = sqlite3.connect(DATABASE_NAME)
     cur = conn.cursor()
-    
+
     # Enable foreign key constraints
     # This ensures the database prevents deletion if related records exist
     cur.execute("PRAGMA foreign_keys = ON;")
@@ -50,11 +51,11 @@ def render_delete_page():
             member_id = member_map[selected_member]
 
             st.error(f"You are about to delete: **{selected_member}**")
-            
+
             with st.expander("ℹ️ Why can't I delete some members?"):
                 st.write("""
-                If a member has related records (Payments, Attendances, Memberships), 
-                the database prevents deletion to keep data safe. 
+                If a member has related records (Payments, Attendances, Memberships),
+                the database prevents deletion to keep data safe.
                 You must delete those related records first.
                 """)
 
@@ -112,7 +113,7 @@ def render_delete_page():
         # Retrieve all class sessions (not just future ones)
         session_map = get_options("""
             SELECT c.class_name || ' (' || cs.start_time || ')', cs.class_session_id
-            FROM Class_Session cs 
+            FROM Class_Session cs
             JOIN Class c ON cs.class_id = c.class_id
             ORDER BY cs.start_time DESC
         """)
@@ -144,7 +145,8 @@ def render_delete_page():
         st.subheader("❌ Delete a Membership Record")
 
         mship_map = get_options("""
-            SELECT p.first_name || ' ' || p.last_name || ' - ' || mt.name || ' (End: ' || ms.end_date || ')', ms.membership_id
+            SELECT (p.first_name || ' ' || p.last_name || ' - ' || mt.name ||
+                    ' (End: ' || ms.end_date || ')'), ms.membership_id
             FROM Membership ms
             JOIN Member m ON ms.member_id = m.member_id
             JOIN Person p ON m.person_id = p.id
@@ -158,7 +160,7 @@ def render_delete_page():
             ms_id = mship_map[sel_mship]
 
             st.error("This will completely remove the membership record from history.")
-            
+
             if st.button("Confirm Delete Membership"):
                 try:
                     cur.execute("DELETE FROM Membership WHERE membership_id = ?", (ms_id,))

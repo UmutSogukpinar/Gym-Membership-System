@@ -2,17 +2,17 @@ import sqlite3
 
 DATABASE_NAME: str = "gym.db"
 
+
 def create_tables() -> None:
     """
     Create all necessary database tables for the gym management system.
     Includes tables for persons, members, trainers, classes, memberships, and related entities.
     """
-    conn : sqlite3.Connection = sqlite3.connect(DATABASE_NAME)
-    cur : sqlite3.Cursor = conn.cursor()
+    conn: sqlite3.Connection = sqlite3.connect(DATABASE_NAME)
+    cur: sqlite3.Cursor = conn.cursor()
 
     # Enable foreign key constraint to maintain referential integrity
     cur.execute('PRAGMA foreign_keys = ON;')
-
 
     # Initialization flag table
     # Used to track if sample data has been inserted to prevent redundant insertion
@@ -37,7 +37,7 @@ def create_tables() -> None:
         )
     ''')
 
-    # PHONE 
+    # PHONE
     cur.execute('''
         CREATE TABLE IF NOT EXISTS Phone(
             phone_id INTEGER PRIMARY KEY AUTOINCREMENT,

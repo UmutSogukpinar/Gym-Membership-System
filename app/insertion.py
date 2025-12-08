@@ -3,6 +3,7 @@ import sqlite3
 from database import DATABASE_NAME
 from datetime import datetime
 
+
 def get_options(query):
     """
     Execute a query and return results as a dictionary mapping display names to IDs.
@@ -12,25 +13,26 @@ def get_options(query):
     cur.execute(query)
     data = cur.fetchall()
     conn.close()
-    
+
     return {row[0]: row[1] for row in data} if data else {}
+
 
 def render_insert_page():
     """
     Main page for inserting new records with STRICT INPUT VALIDATION.
     """
     st.header("Record Registration")
-    
+
     menu_options = [
-        "New Member Registration", 
-        "New Trainer Registration", 
+        "New Member Registration",
+        "New Trainer Registration",
         "Create New Class",
         "Schedule Class Session",
         "Assign Membership",
         "Record Payment",
         "Assign Trainer Specialization"
     ]
-    
+
     choice = st.selectbox("Select Registration Type", menu_options)
 
     conn = sqlite3.connect(DATABASE_NAME)
@@ -49,7 +51,7 @@ def render_insert_page():
             l_name = col2.text_input("Last Name *")
             email = st.text_input("Email *")
             birth_date = st.date_input("Birth Date")
-            
+
             st.markdown("##### Address & Contact")
             col3, col4 = st.columns(2)
             phone = col3.text_input("Personal Phone Number *")
@@ -70,29 +72,39 @@ def render_insert_page():
 
             if submitted:
                 # Validation List: All these must be True (not empty strings)
-                required_fields = [f_name, l_name, email, phone, city, street, zip_code, contact_name, relationship, contact_phone]
-                
+                required_fields = [
+                    f_name,
+                    l_name,
+                    email,
+                    phone,
+                    city,
+                    street,
+                    zip_code,
+                    contact_name,
+                    relationship,
+                    contact_phone]
+
                 if all(required_fields):
                     try:
-                        cur.execute('''INSERT INTO Person (first_name, last_name, birth_date, email, city, street, zip) 
-                                       VALUES (?, ?, ?, ?, ?, ?, ?)''', 
+                        cur.execute('''INSERT INTO Person (first_name, last_name, birth_date, email, city, street, zip)
+                                       VALUES (?, ?, ?, ?, ?, ?, ?)''',
                                     (f_name, l_name, str(birth_date), email, city, street, zip_code))
                         new_person_id = cur.lastrowid
-                        
-                        cur.execute('''INSERT INTO Phone (owner_type, owner_id, phone_number, type) 
-                                       VALUES (?, ?, ?, ?)''', 
+
+                        cur.execute('''INSERT INTO Phone (owner_type, owner_id, phone_number, type)
+                                       VALUES (?, ?, ?, ?)''',
                                     ('person', new_person_id, phone, 'mobile'))
 
-                        cur.execute('''INSERT INTO Member (person_id, member_status) VALUES (?, ?)''', 
+                        cur.execute('''INSERT INTO Member (person_id, member_status) VALUES (?, ?)''',
                                     (new_person_id, status))
 
-                        cur.execute('''INSERT INTO Contact (person_id, contact_name, relationship) 
-                                       VALUES (?, ?, ?)''', 
+                        cur.execute('''INSERT INTO Contact (person_id, contact_name, relationship)
+                                       VALUES (?, ?, ?)''',
                                     (new_person_id, contact_name, relationship))
                         new_contact_id = cur.lastrowid
 
-                        cur.execute('''INSERT INTO Phone (owner_type, owner_id, phone_number, type) 
-                                       VALUES (?, ?, ?, ?)''', 
+                        cur.execute('''INSERT INTO Phone (owner_type, owner_id, phone_number, type)
+                                       VALUES (?, ?, ?, ?)''',
                                     ('contact', new_contact_id, contact_phone, 'mobile'))
 
                         conn.commit()
@@ -116,7 +128,7 @@ def render_insert_page():
             l_name = col2.text_input("Last Name *")
             email = st.text_input("Email *")
             birth_date = st.date_input("Birth Date")
-            
+
             st.markdown("##### Address & Contact")
             col3, col4 = st.columns(2)
             phone = col3.text_input("Personal Phone Number *")
@@ -138,17 +150,17 @@ def render_insert_page():
 
                 if all(required_fields):
                     try:
-                        cur.execute('''INSERT INTO Person (first_name, last_name, birth_date, email, city, street, zip) 
-                                       VALUES (?, ?, ?, ?, ?, ?, ?)''', 
+                        cur.execute('''INSERT INTO Person (first_name, last_name, birth_date, email, city, street, zip)
+                                       VALUES (?, ?, ?, ?, ?, ?, ?)''',
                                     (f_name, l_name, str(birth_date), email, city, street, zip_code))
                         new_person_id = cur.lastrowid
-                        
-                        cur.execute('''INSERT INTO Phone (owner_type, owner_id, phone_number, type) 
-                                       VALUES (?, ?, ?, ?)''', 
+
+                        cur.execute('''INSERT INTO Phone (owner_type, owner_id, phone_number, type)
+                                       VALUES (?, ?, ?, ?)''',
                                     ('person', new_person_id, phone, 'mobile'))
 
-                        cur.execute('''INSERT INTO Trainer (person_id, specialization, hire_date, trainer_status) 
-                                       VALUES (?, ?, ?, ?)''', 
+                        cur.execute('''INSERT INTO Trainer (person_id, specialization, hire_date, trainer_status)
+                                       VALUES (?, ?, ?, ?)''',
                                     (new_person_id, specialization, str(hire_date), t_status))
 
                         conn.commit()
@@ -197,11 +209,11 @@ def render_insert_page():
         else:
             with st.form("schedule_session"):
                 selected_class_name = st.selectbox("Select Class Type", list(class_map.keys()))
-                
+
                 col1, col2 = st.columns(2)
                 date = col1.date_input("Date")
                 time_start = col2.time_input("Start Time")
-                
+
                 col3, col4 = st.columns(2)
                 duration = col3.number_input("Duration (minutes)", min_value=30, value=60)
                 capacity = col4.number_input("Capacity", min_value=1, value=15)
@@ -214,7 +226,7 @@ def render_insert_page():
                     if duration > 0 and capacity > 0:
                         start_datetime = f"{date} {time_start}"
                         class_id = class_map[selected_class_name]
-                        
+
                         try:
                             cur.execute('''
                                 INSERT INTO Class_Session (class_id, start_time, end_time, capacity, duration)
@@ -234,7 +246,7 @@ def render_insert_page():
     # ==================================================
     elif choice == "Assign Membership":
         st.subheader("Assign Membership Package")
-        
+
         member_query = """
             SELECT p.first_name || ' ' || p.last_name || ' (ID: ' || m.member_id || ')', m.member_id
             FROM Member m JOIN Person p ON m.person_id = p.id
@@ -250,11 +262,11 @@ def render_insert_page():
             with st.form("assign_membership"):
                 selected_member = st.selectbox("Select Member", list(member_map.keys()))
                 selected_type = st.selectbox("Membership Type", list(type_map.keys()))
-                
+
                 col1, col2 = st.columns(2)
                 start_d = col1.date_input("Start Date", value=datetime.today())
                 end_d = col2.date_input("End Date", value=datetime.today())
-                
+
                 is_active = st.checkbox("Set as Active Immediately", value=True)
 
                 submitted = st.form_submit_button("Assign Membership")
@@ -265,14 +277,14 @@ def render_insert_page():
                     else:
                         m_id = member_map[selected_member]
                         mt_id = type_map[selected_type]
-                        
+
                         try:
                             cur.execute('''
                                 INSERT INTO Membership (member_id, membership_type_id, is_active, start_date, end_date)
                                 VALUES (?, ?, ?, ?, ?)
                             ''', (m_id, mt_id, 1 if is_active else 0, str(start_d), str(end_d)))
                             conn.commit()
-                            st.success(f"Membership assigned successfully!")
+                            st.success("Membership assigned successfully!")
                         except Exception as e:
                             st.error(f"Error: {e}")
 
@@ -298,7 +310,7 @@ def render_insert_page():
                 p_date = st.date_input("Payment Date")
 
                 submitted = st.form_submit_button("Record Payment")
-                
+
                 if submitted:
                     # Enforce amount > 0
                     if amount > 0:
@@ -324,7 +336,7 @@ def render_insert_page():
     # ==================================================
     elif choice == "Assign Trainer Specialization":
         st.subheader("Assign Specialization to Trainer")
-        
+
         trainer_query = """
             SELECT p.first_name || ' ' || p.last_name, t.trainer_id
             FROM Trainer t JOIN Person p ON t.person_id = p.id
@@ -340,18 +352,19 @@ def render_insert_page():
             with st.form("spec_form"):
                 t_name = st.selectbox("Trainer", list(trainer_map.keys()))
                 s_name = st.selectbox("Specialization Area", list(spec_map.keys()))
-                
+
                 submitted = st.form_submit_button("Assign")
-                
+
                 if submitted:
                     # Select boxes always return a value if the list is not empty,
                     # but handling the case just in case.
                     if t_name and s_name:
                         t_id = trainer_map[t_name]
                         s_id = spec_map[s_name]
-                        
+
                         try:
-                            cur.execute("INSERT INTO Trainer_Specialization (trainer_id, specialization_id) VALUES (?, ?)", (t_id, s_id))
+                            query = "INSERT INTO Trainer_Specialization (trainer_id, specialization_id) VALUES (?, ?)"
+                            cur.execute(query, (t_id, s_id))
                             conn.commit()
                             st.success(f"Assigned {s_name} to {t_name}")
                         except sqlite3.IntegrityError:
@@ -359,6 +372,6 @@ def render_insert_page():
                         except Exception as e:
                             st.error(f"Error: {e}")
                     else:
-                         st.error("Missing selections.")
+                        st.error("Missing selections.")
 
     conn.close()

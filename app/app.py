@@ -2,7 +2,7 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 from database import DATABASE_NAME, create_tables
-from insert_data import insert_sample_data 
+from insert_data import insert_sample_data
 from queries import get_custom_query
 from insertion import render_insert_page
 from update import render_update_page
@@ -23,9 +23,6 @@ result = cur.fetchone()
 
 # If no sample data exists, create tables and insert sample data
 if result is None:
-    from database import create_tables
-    from insert_data import insert_sample_data
-
     create_tables()
     insert_sample_data()
     # Mark that sample data has been inserted
@@ -38,17 +35,17 @@ conn.close()
 # Streamlit UI Configuration
 # ============================================
 
-PAGE_CONFIG_HEADER : str = "Gym Management"
-PAGE_CONFIG_LAYOUT : str = "wide"
-MAIN_PAGE_TITLE : str = "🏋️ Gym Management Panel"
-SIDEBAR_HEADER : str = "Navigation"
+PAGE_CONFIG_HEADER: str = "Gym Management"
+PAGE_CONFIG_LAYOUT: str = "wide"
+MAIN_PAGE_TITLE: str = "🏋️ Gym Management Panel"
+SIDEBAR_HEADER: str = "Navigation"
 
 st.set_page_config(page_title=PAGE_CONFIG_HEADER, layout=PAGE_CONFIG_LAYOUT)
 st.title(MAIN_PAGE_TITLE)
 
 # Create sidebar navigation
 st.sidebar.header(SIDEBAR_HEADER)
-menu : str = st.sidebar.radio(
+menu: str = st.sidebar.radio(
     "Select Action",
     ["Home", "View Tables", "Insertion", "Update", "Delete"]
 )
@@ -73,9 +70,9 @@ elif menu == "View Tables":
         "Payment", "Check_in", "Attends", "Teaches"
     ]
 
-    selected_table : str = st.sidebar.selectbox("Choose table:", table_names)
+    selected_table: str = st.sidebar.selectbox("Choose table:", table_names)
 
-    conn : sqlite3.Connection = sqlite3.connect(DATABASE_NAME)
+    conn: sqlite3.Connection = sqlite3.connect(DATABASE_NAME)
     try:
         query = get_custom_query(selected_table)
         df = pd.read_sql_query(query, conn)

@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from database import DATABASE_NAME
 from insertion import get_options
 
+
 def render_update_page():
     """
     Page for updating existing records in the gym management system.
@@ -18,7 +19,7 @@ def render_update_page():
         "Reschedule Class Session",
         "Update Membership Validity"
     ]
-    
+
     choice = st.selectbox("Select Update Type", menu_options)
 
     # Database connection for all update operations
@@ -48,27 +49,27 @@ def render_update_page():
             # Fetch current member information
             cur.execute("""
                 SELECT p.email, p.city, p.street, p.zip, m.member_status, p.id
-                FROM Member m 
-                JOIN Person p ON m.person_id = p.id 
+                FROM Member m
+                JOIN Person p ON m.person_id = p.id
                 WHERE m.member_id = ?
             """, (member_id,))
-            
+
             data = cur.fetchone()
-            
+
             if data:
                 curr_email, curr_city, curr_street, curr_zip, curr_status, person_id = data
 
                 with st.form("update_member_form"):
                     st.info(f"Editing: {selected_member_name}")
-                    
+
                     col1, col2 = st.columns(2)
                     new_email = col1.text_input("Email", value=curr_email)
                     new_city = col2.text_input("City", value=curr_city)
-                    
+
                     col3, col4 = st.columns(2)
                     new_street = col3.text_input("Street", value=curr_street)
                     new_zip = col4.text_input("Zip Code", value=curr_zip)
-                    
+
                     status_opts = ["active", "inactive", "banned", "pending"]
                     curr_idx = status_opts.index(curr_status) if curr_status in status_opts else 0
                     new_status = st.selectbox("Member Status", status_opts, index=curr_idx)
@@ -83,14 +84,15 @@ def render_update_page():
                         else:
                             try:
                                 cur.execute("""
-                                    UPDATE Person 
-                                    SET email=?, city=?, street=?, zip=? 
+                                    UPDATE Person
+                                    SET email=?, city=?, street=?, zip=?
                                     WHERE id=?
-                                """, (new_email.strip(), new_city.strip(), new_street.strip(), new_zip.strip(), person_id))
+                                """, (new_email.strip(), new_city.strip(), new_street.strip(),
+                                      new_zip.strip(), person_id))
 
                                 cur.execute("""
-                                    UPDATE Member 
-                                    SET member_status=? 
+                                    UPDATE Member
+                                    SET member_status=?
                                     WHERE member_id=?
                                 """, (new_status, member_id))
 
@@ -121,7 +123,7 @@ def render_update_page():
                 FROM Trainer t JOIN Person p ON t.person_id = p.id
                 WHERE t.trainer_id = ?
             """, (trainer_id,))
-            
+
             row = cur.fetchone()
             if row:
                 curr_spec, curr_status, curr_email = row
@@ -135,7 +137,7 @@ def render_update_page():
                     # Use safe variables for form inputs
                     new_spec = st.text_input("Specialization", value=val_spec)
                     new_email = st.text_input("Email", value=val_email)
-                    
+
                     status_opts = ["active", "on_leave", "terminated"]
                     curr_idx = status_opts.index(curr_status) if curr_status in status_opts else 0
                     new_status = st.selectbox("Employment Status", status_opts, index=curr_idx)
@@ -147,9 +149,9 @@ def render_update_page():
                             st.error("⚠️ Specialization and Email cannot be empty!")
                         else:
                             try:
-                                cur.execute("UPDATE Trainer SET specialization=?, trainer_status=? WHERE trainer_id=?", 
+                                cur.execute("UPDATE Trainer SET specialization=?, trainer_status=? WHERE trainer_id=?",
                                             (new_spec.strip(), new_status, trainer_id))
-                                
+
                                 conn.commit()
                                 st.success("Trainer info updated!")
                             except Exception as e:
@@ -165,7 +167,7 @@ def render_update_page():
         # Fetch list of class sessions for selection
         session_map = get_options("""
             SELECT c.class_name || ' (' || cs.start_time || ')', cs.class_session_id
-            FROM Class_Session cs 
+            FROM Class_Session cs
             JOIN Class c ON cs.class_id = c.class_id
             ORDER BY cs.start_time DESC
         """)
@@ -176,45 +178,46 @@ def render_update_page():
             selected_session = st.selectbox("Select Session to Edit", list(session_map.keys()))
             session_id = session_map[selected_session]
 
-            cur.execute("SELECT start_time, end_time, capacity FROM Class_Session WHERE class_session_id=?", (session_id,))
+            query = "SELECT start_time, end_time, capacity FROM Class_Session WHERE class_session_id=?"
+            cur.execute(query, (session_id,))
             row = cur.fetchone()
-            
+
             if row:
                 try:
                     curr_start_dt = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S')
                     curr_end_dt = datetime.strptime(row[1], '%Y-%m-%d %H:%M:%S')
-                except:
+                except BaseException:
                     curr_start_dt = datetime.now()
                     curr_end_dt = datetime.now()
 
                 with st.form("update_session_form"):
                     col1, col2 = st.columns(2)
                     new_date = col1.date_input("Date", value=curr_start_dt.date())
-                    
+
                     # Create base time options in 15-minute intervals
                     # Generate times from 00:00 to 23:45
                     base_time_options = []
                     base_day = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-                    for i in range(0, 24*60, 15): 
+                    for i in range(0, 24 * 60, 15):
                         base_time_options.append((base_day + timedelta(minutes=i)).time())
-                    
+
                     # Start time selection
                     # Copy list to avoid reference issues
                     start_opts = base_time_options.copy()
-                    
+
                     # Add database time if not in standard options (e.g., 14:41)
                     if curr_start_dt.time() not in start_opts:
                         start_opts.append(curr_start_dt.time())
                         start_opts.sort()
-                    
+
                     try:
                         st_idx = start_opts.index(curr_start_dt.time())
                     except ValueError:
                         st_idx = 0
 
                     new_start_time = col2.selectbox(
-                        "Start Time", 
-                        start_opts, 
+                        "Start Time",
+                        start_opts,
                         index=st_idx,
                         format_func=lambda t: t.strftime("%H:%M")
                     )
@@ -223,7 +226,7 @@ def render_update_page():
 
                     # End time selection (similar to start time)
                     end_opts = base_time_options.copy()
-                    
+
                     # Add database end time if not in standard options
                     if curr_end_dt.time() not in end_opts:
                         end_opts.append(curr_end_dt.time())
@@ -235,12 +238,12 @@ def render_update_page():
                         et_idx = 0
 
                     new_end_time = col3.selectbox(
-                        "End Time", 
-                        end_opts, 
+                        "End Time",
+                        end_opts,
                         index=et_idx,
                         format_func=lambda t: t.strftime("%H:%M")
                     )
-                    
+
                     new_capacity = col4.number_input("Capacity", value=row[2], min_value=1)
 
                     if st.form_submit_button("Update Session"):
@@ -251,14 +254,14 @@ def render_update_page():
                         else:
                             new_start_str = f"{new_date} {new_start_time}"
                             new_end_str = f"{new_date} {new_end_time}"
-                            
+
                             dt_start = datetime.combine(new_date, new_start_time)
                             dt_end = datetime.combine(new_date, new_end_time)
                             new_duration = (dt_end - dt_start).seconds // 60
 
                             try:
                                 cur.execute("""
-                                    UPDATE Class_Session 
+                                    UPDATE Class_Session
                                     SET start_time=?, end_time=?, capacity=?, duration=?
                                     WHERE class_session_id=?
                                 """, (new_start_str, new_end_str, new_capacity, new_duration, session_id))
@@ -276,7 +279,8 @@ def render_update_page():
 
         # Fetch list of active memberships with member and type information
         mship_map = get_options("""
-            SELECT p.first_name || ' ' || p.last_name || ' - ' || mt.name || ' (End: ' || ms.end_date || ')', ms.membership_id
+            SELECT (p.first_name || ' ' || p.last_name || ' - ' || mt.name ||
+                    ' (End: ' || ms.end_date || ')'), ms.membership_id
             FROM Membership ms
             JOIN Member m ON ms.member_id = m.member_id
             JOIN Person p ON m.person_id = p.id
@@ -294,7 +298,7 @@ def render_update_page():
                 try:
                     s_date_obj = datetime.strptime(ms_row[0], '%Y-%m-%d').date()
                     e_date_obj = datetime.strptime(ms_row[1], '%Y-%m-%d').date()
-                except:
+                except BaseException:
                     s_date_obj = datetime.today()
                     e_date_obj = datetime.today()
 
@@ -306,11 +310,11 @@ def render_update_page():
                     if st.form_submit_button("Update Membership"):
                         # Validate date logic
                         if new_end_date < s_date_obj:
-                             st.error("Error: End date cannot be before start date!")
+                            st.error("Error: End date cannot be before start date!")
                         else:
                             try:
                                 cur.execute("""
-                                    UPDATE Membership 
+                                    UPDATE Membership
                                     SET end_date=?, is_active=?
                                     WHERE membership_id=?
                                 """, (str(new_end_date), 1 if new_active else 0, ms_id))

@@ -6,12 +6,12 @@ def get_custom_query(table_name):
     # MEMBER Table - Display member information with personal details
     if table_name == "Member":
         return ("""
-        SELECT 
-            m.member_id, 
-            p.first_name, 
-            p.last_name, 
-            p.email, 
-            m.member_status 
+        SELECT
+            m.member_id,
+            p.first_name,
+            p.last_name,
+            p.email,
+            m.member_status
         FROM Member m
         JOIN Person p ON m.person_id = p.id
         """)
@@ -19,12 +19,12 @@ def get_custom_query(table_name):
     # TRAINER Table - Display trainer details with qualifications
     elif table_name == "Trainer":
         return ("""
-        SELECT 
-            t.trainer_id, 
+        SELECT
+            t.trainer_id,
             p.first_name || ' ' || p.last_name as Trainer_Name,
             t.specialization,
-            t.hire_date, 
-            t.trainer_status 
+            t.hire_date,
+            t.trainer_status
         FROM Trainer t
         JOIN Person p ON t.person_id = p.id
         """)
@@ -32,7 +32,7 @@ def get_custom_query(table_name):
     # MEMBERSHIP Table
     elif table_name == "Membership":
         return ("""
-        SELECT 
+        SELECT
             ms.membership_id,
             p.first_name || ' ' || p.last_name as Member_Name,
             mt.name as Membership_Type,
@@ -49,7 +49,7 @@ def get_custom_query(table_name):
     # CLASS_SESSION Table - Display scheduled class sessions with timing and capacity
     elif table_name == "Class_Session":
         return ("""
-        SELECT 
+        SELECT
             cs.class_session_id,
             c.class_name,
             c.description,
@@ -59,7 +59,7 @@ def get_custom_query(table_name):
         FROM Class_Session cs
         JOIN Class c ON cs.class_id = c.class_id
         """)
-        
+
     # PAYMENT Table - Display member payment records with method and amount
     elif table_name == "Payment":
         return ("""
@@ -90,7 +90,7 @@ def get_custom_query(table_name):
     # TRAINER_SPECIALIZATION Table
     elif table_name == "Trainer_Specialization":
         return ("""
-        SELECT 
+        SELECT
             p.first_name || ' ' || p.last_name as Trainer_Name,
             s.name as Specialization_Area
         FROM Trainer_Specialization ts
@@ -102,7 +102,7 @@ def get_custom_query(table_name):
     # CONTACT Table - Display emergency contact information with phone numbers
     elif table_name == "Contact":
         return ("""
-        SELECT 
+        SELECT
             c.contact_id,
             p.first_name || ' ' || p.last_name as Member_Name,
             c.contact_name as Emergency_Contact,
@@ -117,7 +117,7 @@ def get_custom_query(table_name):
     elif table_name == "Attends":
         # Display class attendance records showing which members attended which sessions
         return ("""
-        SELECT 
+        SELECT
             p.first_name || ' ' || p.last_name as Member_Name,
             c.class_name as Class,
             cs.start_time as Session_Time,
@@ -132,7 +132,7 @@ def get_custom_query(table_name):
     elif table_name == "Teaches":
         # Display teaching assignments showing which trainers teach which sessions
         return ("""
-        SELECT 
+        SELECT
             p.first_name || ' ' || p.last_name as Trainer_Name,
             c.class_name as Class,
             cs.start_time as Session_Time,
@@ -143,11 +143,11 @@ def get_custom_query(table_name):
         JOIN Class_Session cs ON t.class_session_id = cs.class_session_id
         JOIN Class c ON cs.class_id = c.class_id
         """)
-    
+
     elif table_name == "Check_in":
         # Display member check-in/check-out records for class attendance tracking
         return ("""
-        SELECT 
+        SELECT
                 ci.checkin_id,
                 p.first_name || ' ' || p.last_name as Member_Name,
                 c.class_name as Class,

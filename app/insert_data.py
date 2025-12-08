@@ -1,6 +1,7 @@
 import sqlite3
 from database import DATABASE_NAME
 
+
 def insert_sample_data():
     """
     Populate the database with sample data for testing and demonstration.
@@ -20,7 +21,6 @@ def insert_sample_data():
         ("Emir", "Salaman", "1992-06-11", "emri@gmail.com", "Bursa", "Nilüfer", "16000"),
         ("Ece", "Aksoy", "1987-09-19", "ece@gmail.com", "Adana", "Çukurova", "01000")
     ]
-
 
     # Insert each person with their contact information
     for i, person in enumerate(people, start=1):
@@ -55,8 +55,10 @@ def insert_sample_data():
     cur.execute("INSERT OR IGNORE INTO Member (person_id, member_status) VALUES (?, ?)", (4, "inactive"))
 
     # === TRAINER ===
-    cur.execute("INSERT OR IGNORE INTO Trainer (person_id, hire_date, trainer_status) VALUES (?, ?, ?)", (3, "2023-01-01", "active"))
-    cur.execute("INSERT OR IGNORE INTO Trainer (person_id, hire_date, trainer_status) VALUES (?, ?, ?)", (5, "2022-05-15", "active"))
+    cur.execute("INSERT OR IGNORE INTO Trainer (person_id, hire_date, trainer_status) VALUES (?, ?, ?)",
+                (3, "2023-01-01", "active"))
+    cur.execute("INSERT OR IGNORE INTO Trainer (person_id, hire_date, trainer_status) VALUES (?, ?, ?)",
+                (5, "2022-05-15", "active"))
 
     # === SPECIALIZATION ===
     specializations = ["Yoga", "Pilates", "HIIT"]
@@ -69,8 +71,10 @@ def insert_sample_data():
     cur.execute("INSERT OR IGNORE INTO Trainer_Specialization (trainer_id, specialization_id) VALUES (?, ?)", (2, 3))
 
     # === CLASS ===
-    cur.execute("INSERT OR IGNORE INTO Class (class_name, description) VALUES (?, ?)", ("Yoga Basics", "Yoga for beginners"))
-    cur.execute("INSERT OR IGNORE INTO Class (class_name, description) VALUES (?, ?)", ("Pilates Core", "Core strength and flexibility"))
+    cur.execute("INSERT OR IGNORE INTO Class (class_name, description) VALUES (?, ?)",
+                ("Yoga Basics", "Yoga for beginners"))
+    cur.execute("INSERT OR IGNORE INTO Class (class_name, description) VALUES (?, ?)",
+                ("Pilates Core", "Core strength and flexibility"))
 
     # === CLASS_SESSION ===
     cur.execute('''

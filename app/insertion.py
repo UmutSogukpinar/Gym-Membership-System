@@ -38,7 +38,7 @@ def render_insert_page():
     cur.execute("PRAGMA foreign_keys = ON;")
 
     # ==========================================
-    # 1. NEW MEMBER REGISTRATION
+    # NEW MEMBER REGISTRATION
     # ==========================================
     if choice == "New Member Registration":
         st.subheader("Member Details")
@@ -100,11 +100,13 @@ def render_insert_page():
                     except Exception as e:
                         st.error(f"Database Error: {e}")
                 else:
-                    st.error("⚠️ Registration Failed: All fields marked with * are required.")
+                    st.error("Registration Failed: All fields marked with * are required.")
 
-    # ==========================================
-    # 2. NEW TRAINER REGISTRATION
-    # ==========================================
+    # ==================================================
+    # NEW TRAINER REGISTRATION
+    # Enables registration of new fitness trainers with
+    # personal details, contact information, and employment status
+    # ==================================================
     elif choice == "New Trainer Registration":
         st.subheader("Trainer Details")
         with st.form("add_trainer_full"):
@@ -154,11 +156,13 @@ def render_insert_page():
                     except Exception as e:
                         st.error(f"Database Error: {e}")
                 else:
-                    st.error("⚠️ Registration Failed: All fields marked with * are required.")
+                    st.error("Registration Failed: All fields marked with * are required.")
 
-    # ==========================================
-    # 3. CREATE NEW CLASS
-    # ==========================================
+    # ==================================================
+    # CREATE NEW CLASS
+    # Allows creation of new class types with name and description.
+    # These class types can later be scheduled for specific sessions
+    # ==================================================
     elif choice == "Create New Class":
         st.subheader("Define a New Class Type")
         with st.form("add_class_simple"):
@@ -175,11 +179,13 @@ def render_insert_page():
                     except Exception as e:
                         st.error(f"Error: {e}")
                 else:
-                    st.error("⚠️ Both Class Name and Description are required.")
+                    st.error("Both Class Name and Description are required.")
 
-    # ==========================================
-    # 4. SCHEDULE CLASS SESSION
-    # ==========================================
+    # ==================================================
+    # SCHEDULE CLASS SESSION
+    # Assigns specific time slots and capacity limits to existing class types.
+    # Each session represents a single class instance on a particular date and time
+    # ==================================================
     elif choice == "Schedule Class Session":
         st.subheader("Schedule a Session")
         st.info("Assign a specific time and capacity to a Class Type.")
@@ -219,11 +225,13 @@ def render_insert_page():
                         except Exception as e:
                             st.error(f"Database Error: {e}")
                     else:
-                        st.error("⚠️ Invalid Capacity or Duration.")
+                        st.error("Invalid Capacity or Duration.")
 
-    # ==========================================
-    # 5. ASSIGN MEMBERSHIP
-    # ==========================================
+    # ==================================================
+    # ASSIGN MEMBERSHIP
+    # Links membership packages to members with activation and expiration dates.
+    # Members can have multiple active memberships simultaneously
+    # ==================================================
     elif choice == "Assign Membership":
         st.subheader("Assign Membership Package")
         
@@ -253,7 +261,7 @@ def render_insert_page():
 
                 if submitted:
                     if end_d < start_d:
-                        st.error("⚠️ Error: End date cannot be before start date!")
+                        st.error("Error: End date cannot be before start date!")
                     else:
                         m_id = member_map[selected_member]
                         mt_id = type_map[selected_type]
@@ -268,9 +276,11 @@ def render_insert_page():
                         except Exception as e:
                             st.error(f"Error: {e}")
 
-    # ==========================================
-    # 6. RECORD PAYMENT
-    # ==========================================
+    # ==================================================
+    # RECORD PAYMENT
+    # Processes and records financial transactions from members.
+    # Supports multiple payment methods (Credit Card, Cash, Bank Transfer)
+    # ==================================================
     elif choice == "Record Payment":
         st.subheader("Process Payment")
 
@@ -303,13 +313,15 @@ def render_insert_page():
                         except Exception as e:
                             st.error(f"Error: {e}")
                     else:
-                        st.error("⚠️ Payment amount must be greater than 0.")
+                        st.error("Payment amount must be greater than 0.")
         else:
             st.warning("No members available to receive payment from.")
 
-    # ==========================================
-    # 7. ASSIGN TRAINER SPECIALIZATION
-    # ==========================================
+    # ==================================================
+    # ASSIGN TRAINER SPECIALIZATION
+    # Assigns specialized training areas to trainers.
+    # A trainer can have multiple specializations (e.g., Yoga, Weightlifting, Cardio)
+    # ==================================================
     elif choice == "Assign Trainer Specialization":
         st.subheader("Assign Specialization to Trainer")
         
@@ -343,10 +355,10 @@ def render_insert_page():
                             conn.commit()
                             st.success(f"Assigned {s_name} to {t_name}")
                         except sqlite3.IntegrityError:
-                            st.error("⚠️ This trainer already has this specialization.")
+                            st.error("This trainer already has this specialization.")
                         except Exception as e:
                             st.error(f"Error: {e}")
                     else:
-                         st.error("⚠️ Missing selections.")
+                         st.error("Missing selections.")
 
     conn.close()

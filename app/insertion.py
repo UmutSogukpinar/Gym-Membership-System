@@ -56,26 +56,26 @@ def insert_new_member(cur, conn):
 
             if all(required_fields):
                 try:
-                    # 1. Insert Person
+                    # 1Insert Person
                     cur.execute('''INSERT INTO Person (first_name, last_name, birth_date, email, city, street, zip)
                                    VALUES (?, ?, ?, ?, ?, ?, ?)''',
                                 (f_name, l_name, str(birth_date), email, city, street, zip_code))
                     new_person_id = cur.lastrowid
 
-                    # 2. Insert Person Phone
+                    # Insert Person Phone
                     cur.execute('''INSERT INTO Phone (owner_type, owner_id, phone_number, type)
                                    VALUES (?, ?, ?, ?)''', ('person', new_person_id, phone, 'mobile'))
 
-                    # 3. Insert Member
+                    # Insert Member
                     cur.execute('''INSERT INTO Member (person_id, member_status) VALUES (?, ?)''',
                                 (new_person_id, status))
 
-                    # 4. Insert Contact
+                    # Insert Contact
                     cur.execute('''INSERT INTO Contact (person_id, contact_name, relationship)
                                    VALUES (?, ?, ?)''', (new_person_id, contact_name, relationship))
                     new_contact_id = cur.lastrowid
 
-                    # 5. Insert Contact Phone
+                    # Insert Contact Phone
                     cur.execute('''INSERT INTO Phone (owner_type, owner_id, phone_number, type)
                                    VALUES (?, ?, ?, ?)''', ('contact', new_contact_id, contact_phone, 'mobile'))
 
@@ -87,9 +87,15 @@ def insert_new_member(cur, conn):
                 st.error("Registration Failed: All fields marked with * are required.")
 
 
-def insert_new_trainer(cur, conn):
-    st.subheader("Trainer Details")
-    with st.form("add_trainer_full"):
+def insert_new_trainer(cur: sqlite3.Cursor, conn: sqlite3.Connection):
+    """
+    Renders the Trainer Registration form and handles database insertion
+    only when all fields are strictly validated.
+    """
+    st.subheader("💪 Trainer Details")
+    
+    with st.form("add_trainer_full", clear_on_submit=False):
+        # --- Personal Information ---
         st.markdown("##### Personal Information")
         col1, col2 = st.columns(2)
         f_name = col1.text_input("First Name *")
@@ -97,6 +103,7 @@ def insert_new_trainer(cur, conn):
         email = st.text_input("Email *")
         birth_date = st.date_input("Birth Date")
 
+        # --- Address & Contact ---
         st.markdown("##### Address & Contact")
         col3, col4 = st.columns(2)
         phone = col3.text_input("Personal Phone Number *")
@@ -104,37 +111,65 @@ def insert_new_trainer(cur, conn):
         street = st.text_input("Street Address *")
         zip_code = st.text_input("Zip Code *")
 
+        # --- Professional Details ---
         st.markdown("##### Professional Details")
         t_col1, t_col2 = st.columns(2)
-        specialization = t_col1.text_input("Main Specialization (Text) *")
+        specialization = t_col1.text_input("Main Specialization *")
         hire_date = t_col2.date_input("Hire Date")
         t_status = st.selectbox("Employment Status", ["active", "on_leave", "terminated"])
 
+        # --- Submission Button ---
         submitted = st.form_submit_button("Register Trainer")
 
         if submitted:
-            required_fields = [f_name, l_name, email, phone, city, street, zip_code, specialization]
+            # 1. VALIDATION LOGIC
+            # We map the label to the variable to check for empty strings or whitespace
+            field_map = {
+                "First Name": f_name,
+                "Last Name": l_name,
+                "Email": email,
+                "Phone": phone,
+                "City": city,
+                "Street": street,
+                "Zip Code": zip_code,
+                "Specialization": specialization
+            }
 
-            if all(required_fields):
+            # Find any field where the value is None or an empty string after stripping whitespace
+            missing_fields = [key for key, value in field_map.items() if not str(value).strip()]
+
+            if missing_fields:
+                # STOP: Validation Failed
+                st.error(f"⚠️ Registration Failed! The following fields are required: {', '.join(missing_fields)}")
+            else:
                 try:
-                    cur.execute('''INSERT INTO Person (first_name, last_name, birth_date, email, city, street, zip)
-                                   VALUES (?, ?, ?, ?, ?, ?, ?)''',
-                                (f_name, l_name, str(birth_date), email, city, street, zip_code))
+                    # Insert Person Table
+                    cur.execute('''
+                        INSERT INTO Person (first_name, last_name, birth_date, email, city, street, zip)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ''', (f_name, l_name, str(birth_date), email, city, street, zip_code))
+                    
                     new_person_id = cur.lastrowid
 
-                    cur.execute('''INSERT INTO Phone (owner_type, owner_id, phone_number, type)
-                                   VALUES (?, ?, ?, ?)''', ('person', new_person_id, phone, 'mobile'))
+                    # Insert Phone 
+                    # Reference Phone 
+                    cur.execute('''
+                        INSERT INTO Phone (owner_type, owner_id, phone_number, type)
+                        VALUES (?, ?, ?, ?)
+                    ''', ('person', new_person_id, phone, 'mobile'))
 
-                    cur.execute('''INSERT INTO Trainer (person_id, specialization, hire_date, trainer_status)
-                                   VALUES (?, ?, ?, ?)''',
-                                (new_person_id, specialization, str(hire_date), t_status))
+                    # Insert Trainer
+                    cur.execute('''
+                        INSERT INTO Trainer (person_id, specialization, hire_date, trainer_status)
+                        VALUES (?, ?, ?, ?)
+                    ''', (new_person_id, specialization, str(hire_date), t_status))
 
                     conn.commit()
-                    st.success(f"Trainer {f_name} {l_name} added successfully!")
-                except Exception as e:
+                    st.success(f"✅ Trainer {f_name} {l_name} has been successfully registered!")
+                    
+                except sqlite3.Error as e:
+                    conn.rollback()
                     st.error(f"Database Error: {e}")
-            else:
-                st.error("Registration Failed: All fields marked with * are required.")
 
 
 def create_new_class(cur, conn):

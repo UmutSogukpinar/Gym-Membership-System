@@ -5,7 +5,6 @@ from datetime import datetime
 
 # === HELPER FUNCTIONS ===
 
-
 def get_options(query):
     """
     Execute a query and return results as a dictionary mapping display names to IDs.
@@ -18,9 +17,6 @@ def get_options(query):
     return {row[0]: row[1] for row in data} if data else {}
 
 # === FORM FUNCTIONS ===
-# Each function handles a specific insertion task.
-# This isolates variable scopes and fixes [no-redef] errors.
-
 
 def insert_new_member(cur, conn):
     st.subheader("Member Details")
@@ -51,37 +47,30 @@ def insert_new_member(cur, conn):
         submitted = st.form_submit_button("Register Member")
 
         if submitted:
+            # Check for required fields
             required_fields = [f_name, l_name, email, phone, city, street, zip_code,
                                contact_name, relationship, contact_phone]
 
             if all(required_fields):
                 try:
-                    # 1Insert Person
-                    cur.execute('''INSERT INTO Person (first_name, last_name, birth_date, email, city, street, zip)
-                                   VALUES (?, ?, ?, ?, ?, ?, ?)''',
-                                (f_name, l_name, str(birth_date), email, city, street, zip_code))
+                    # 1. Insert Person (Now includes 'phone')
+                    cur.execute('''INSERT INTO Person (first_name, last_name, birth_date, email, phone, city, street, zip)
+                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+                                (f_name, l_name, str(birth_date), email, phone, city, street, zip_code))
                     new_person_id = cur.lastrowid
 
-                    # Insert Person Phone
-                    cur.execute('''INSERT INTO Phone (owner_type, owner_id, phone_number, type)
-                                   VALUES (?, ?, ?, ?)''', ('person', new_person_id, phone, 'mobile'))
-
-                    # Insert Member
+                    # 2. Insert Member
                     cur.execute('''INSERT INTO Member (person_id, member_status) VALUES (?, ?)''',
                                 (new_person_id, status))
 
-                    # Insert Contact
-                    cur.execute('''INSERT INTO Contact (person_id, contact_name, relationship)
-                                   VALUES (?, ?, ?)''', (new_person_id, contact_name, relationship))
-                    new_contact_id = cur.lastrowid
-
-                    # Insert Contact Phone
-                    cur.execute('''INSERT INTO Phone (owner_type, owner_id, phone_number, type)
-                                   VALUES (?, ?, ?, ?)''', ('contact', new_contact_id, contact_phone, 'mobile'))
+                    # 3. Insert Contact (Now includes 'phone')
+                    cur.execute('''INSERT INTO Contact (person_id, contact_name, relationship, phone)
+                                   VALUES (?, ?, ?, ?)''', (new_person_id, contact_name, relationship, contact_phone))
 
                     conn.commit()
                     st.success(f"Member {f_name} {l_name} added successfully!")
                 except Exception as e:
+                    conn.rollback()
                     st.error(f"Database Error: {e}")
             else:
                 st.error("Registration Failed: All fields marked with * are required.")
@@ -92,7 +81,7 @@ def insert_new_trainer(cur: sqlite3.Cursor, conn: sqlite3.Connection):
     Renders the Trainer Registration form and handles database insertion
     only when all fields are strictly validated.
     """
-    st.subheader("💪 Trainer Details")
+    st.subheader("Trainer Details")
     
     with st.form("add_trainer_full", clear_on_submit=False):
         # --- Personal Information ---
@@ -117,13 +106,19 @@ def insert_new_trainer(cur: sqlite3.Cursor, conn: sqlite3.Connection):
         specialization = t_col1.text_input("Main Specialization *")
         hire_date = t_col2.date_input("Hire Date")
         t_status = st.selectbox("Employment Status", ["active", "on_leave", "terminated"])
+        
+        # --- Emergency Contact (Added to match Schema) ---
+        st.markdown("##### Emergency Contact")
+        ec_col1, ec_col2 = st.columns(2)
+        contact_name = ec_col1.text_input("Contact Name *")
+        relationship = ec_col2.text_input("Relationship *")
+        contact_phone = st.text_input("Emergency Contact Phone *")
 
         # --- Submission Button ---
         submitted = st.form_submit_button("Register Trainer")
 
         if submitted:
-            # 1. VALIDATION LOGIC
-            # We map the label to the variable to check for empty strings or whitespace
+            # VALIDATION LOGIC
             field_map = {
                 "First Name": f_name,
                 "Last Name": l_name,
@@ -132,40 +127,41 @@ def insert_new_trainer(cur: sqlite3.Cursor, conn: sqlite3.Connection):
                 "City": city,
                 "Street": street,
                 "Zip Code": zip_code,
-                "Specialization": specialization
+                "Specialization": specialization,
+                "Contact Name": contact_name,
+                "Relationship": relationship,
+                "Contact Phone": contact_phone
             }
 
-            # Find any field where the value is None or an empty string after stripping whitespace
+            # Find missing fields
             missing_fields = [key for key, value in field_map.items() if not str(value).strip()]
 
             if missing_fields:
-                # STOP: Validation Failed
-                st.error(f"⚠️ Registration Failed! The following fields are required: {', '.join(missing_fields)}")
+                st.error(f"Registration Failed! The following fields are required: {', '.join(missing_fields)}")
             else:
                 try:
-                    # Insert Person Table
+                    # 1. Insert Person (Includes phone)
                     cur.execute('''
-                        INSERT INTO Person (first_name, last_name, birth_date, email, city, street, zip)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
-                    ''', (f_name, l_name, str(birth_date), email, city, street, zip_code))
+                        INSERT INTO Person (first_name, last_name, birth_date, email, phone, city, street, zip)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', (f_name, l_name, str(birth_date), email, phone, city, street, zip_code))
                     
                     new_person_id = cur.lastrowid
 
-                    # Insert Phone 
-                    # Reference Phone 
-                    cur.execute('''
-                        INSERT INTO Phone (owner_type, owner_id, phone_number, type)
-                        VALUES (?, ?, ?, ?)
-                    ''', ('person', new_person_id, phone, 'mobile'))
-
-                    # Insert Trainer
+                    # 2. Insert Trainer
                     cur.execute('''
                         INSERT INTO Trainer (person_id, specialization, hire_date, trainer_status)
                         VALUES (?, ?, ?, ?)
                     ''', (new_person_id, specialization, str(hire_date), t_status))
+                    
+                    # 3. Insert Contact (Includes phone)
+                    cur.execute('''
+                        INSERT INTO Contact (person_id, contact_name, relationship, phone)
+                        VALUES (?, ?, ?, ?)
+                    ''', (new_person_id, contact_name, relationship, contact_phone))
 
                     conn.commit()
-                    st.success(f"✅ Trainer {f_name} {l_name} has been successfully registered!")
+                    st.success(f"Trainer {f_name} {l_name} has been successfully registered!")
                     
                 except sqlite3.Error as e:
                     conn.rollback()
@@ -259,7 +255,7 @@ def assign_membership(cur, conn):
                     m_id = member_map[selected_member]
                     mt_id = type_map[selected_type]
                     try:
-                        cur.execute('''INSERT INTO Membership
+                        cur.execute('''INSERT INTO Membership 
                         (member_id, membership_type_id, is_active, start_date, end_date)
                                        VALUES (?, ?, ?, ?, ?)''',
                                     (m_id, mt_id, 1 if is_active else 0, str(start_d), str(end_d)))
@@ -337,7 +333,6 @@ def assign_trainer_specialization(cur, conn):
                         st.error(f"Error: {e}")
 
 # === MAIN DISPATCHER FUNCTION ===
-
 
 def render_insert_page():
     """

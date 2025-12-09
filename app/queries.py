@@ -2,6 +2,7 @@ def get_custom_query(table_name):
     """
     Return a formatted SQL query for displaying a specific table.
     Joins related tables to show comprehensive information for each entity.
+    Updated to reflect single-value 'phone' columns in Person and Contact tables.
     """
     
     # MEMBER Table - Display member information including Phone Number
@@ -12,12 +13,10 @@ def get_custom_query(table_name):
             p.first_name, 
             p.last_name, 
             p.email, 
-            GROUP_CONCAT(ph.phone_number, ', ') as Phone_Number, -- Added Phone Column
+            p.phone, -- Direct access to phone column
             m.member_status 
         FROM Member m
         JOIN Person p ON m.person_id = p.id
-        LEFT JOIN Phone ph ON p.id = ph.owner_id AND ph.owner_type = 'person'
-        GROUP BY m.member_id
         """)
 
     # TRAINER Table - Display trainer details including Phone Number
@@ -26,14 +25,12 @@ def get_custom_query(table_name):
         SELECT 
             t.trainer_id, 
             p.first_name || ' ' || p.last_name as Trainer_Name,
-            GROUP_CONCAT(ph.phone_number, ', ') as Phone_Number, -- Added Phone Column
+            p.phone, -- Direct access to phone column
             t.specialization,
             t.hire_date, 
             t.trainer_status 
         FROM Trainer t
         JOIN Person p ON t.person_id = p.id
-        LEFT JOIN Phone ph ON p.id = ph.owner_id AND ph.owner_type = 'person'
-        GROUP BY t.trainer_id
         """)
 
     # MEMBERSHIP Table
@@ -81,19 +78,6 @@ def get_custom_query(table_name):
         JOIN Person p ON m.person_id = p.id
         """)
 
-    # PHONE Table
-    elif table_name == "Phone":
-        return ("""
-        SELECT
-            ph.phone_id,
-            p.first_name || ' ' || p.last_name as Owner_Name,
-            ph.phone_number,
-            ph.type as Phone_Type
-        FROM Phone ph
-        LEFT JOIN Person p ON ph.owner_id = p.id
-        WHERE ph.owner_type = 'person'
-        """)
-
     # TRAINER_SPECIALIZATION Table
     elif table_name == "Trainer_Specialization":
         return ("""
@@ -114,13 +98,12 @@ def get_custom_query(table_name):
             p.first_name || ' ' || p.last_name as Member_Name,
             c.contact_name as Emergency_Contact,
             c.relationship,
-            GROUP_CONCAT(ph.phone_number, ', ') as Contact_Phones
+            c.phone as Contact_Phone -- Direct access to phone column
         FROM Contact c
         JOIN Person p ON c.person_id = p.id
-        LEFT JOIN Phone ph ON c.contact_id = ph.owner_id AND ph.owner_type = 'contact'
-        GROUP BY c.contact_id
         """)
 
+    # ATTENDS Table
     elif table_name == "Attends":
         return ("""
         SELECT 
@@ -135,6 +118,7 @@ def get_custom_query(table_name):
         JOIN Class c ON cs.class_id = c.class_id
         """)
 
+    # TEACHES Table
     elif table_name == "Teaches":
         return ("""
         SELECT 
@@ -149,6 +133,7 @@ def get_custom_query(table_name):
         JOIN Class c ON cs.class_id = c.class_id
         """)
         
+    # CHECK_IN Table
     elif table_name == "Check_in":
         return ("""
         SELECT
@@ -167,4 +152,5 @@ def get_custom_query(table_name):
         """)
 
     else:
+        # Fallback for any other table
         return (f"SELECT * FROM {table_name}")

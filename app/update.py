@@ -32,7 +32,7 @@ def render_update_page():
     # ==========================================
     # Allow modification of member contact information and status
     if choice == "Update Member Profile":
-        st.subheader("✏️ Edit Member Details")
+        st.subheader("Edit Member Details")
 
         # Fetch list of members for selection
         member_map = get_options("""
@@ -106,7 +106,7 @@ def render_update_page():
     # ==========================================
     # Allow modification of trainer specialization, email, and employment status
     elif choice == "Update Trainer Profile":
-        st.subheader("💪 Edit Trainer Details")
+        st.subheader("Edit Trainer Details")
 
         # Fetch list of trainers for selection
         trainer_map = get_options("""
@@ -146,7 +146,7 @@ def render_update_page():
 
                     if submitted:
                         if not (new_spec.strip() and new_email.strip()):
-                            st.error("⚠️ Specialization and Email cannot be empty!")
+                            st.error("Specialization and Email cannot be empty!")
                         else:
                             try:
                                 cur.execute("UPDATE Trainer SET specialization=?, trainer_status=? WHERE trainer_id=?",
@@ -162,7 +162,7 @@ def render_update_page():
     # ==========================================
     # Allow modification of class session schedule, time, and capacity
     elif choice == "Reschedule Class Session":
-        st.subheader("📅 Reschedule / Edit Session")
+        st.subheader("Reschedule / Edit Session")
 
         # Fetch list of class sessions for selection
         session_map = get_options("""
@@ -275,7 +275,7 @@ def render_update_page():
     # ==========================================
     # Allow extension or modification of membership validity dates and status
     elif choice == "Update Membership Validity":
-        st.subheader("💳 Extend or Update Membership")
+        st.subheader("Extend or Update Membership")
 
         # Fetch list of active memberships with member and type information
         mship_map = get_options("""

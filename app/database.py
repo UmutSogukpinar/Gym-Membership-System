@@ -2,20 +2,13 @@ import sqlite3
 
 DATABASE_NAME: str = "gym.db"
 
-
 def create_tables() -> None:
-    """
-    Create all necessary database tables for the gym management system.
-    Includes tables for persons, members, trainers, classes, memberships, and related entities.
-    """
     conn: sqlite3.Connection = sqlite3.connect(DATABASE_NAME)
     cur: sqlite3.Cursor = conn.cursor()
 
-    # Enable foreign key constraint to maintain referential integrity
     cur.execute('PRAGMA foreign_keys = ON;')
 
-    # Initialization flag table
-    # Used to track if sample data has been inserted to prevent redundant insertion
+    # Flag Table (To prevent duplicate sample data)
     cur.execute('''
         CREATE TABLE IF NOT EXISTS Init_Flags (
             key TEXT PRIMARY KEY,
@@ -23,7 +16,7 @@ def create_tables() -> None:
         );
     ''')
 
-    # PERSON
+    # PERSON (Updated: added 'phone')
     cur.execute('''
         CREATE TABLE IF NOT EXISTS Person (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,20 +24,10 @@ def create_tables() -> None:
             last_name TEXT,
             birth_date TEXT,
             email TEXT,
+            phone TEXT,
             city TEXT,
             street TEXT,
             zip TEXT
-        )
-    ''')
-
-    # PHONE
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS Phone(
-            phone_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            owner_type TEXT CHECK(owner_type IN ('person', 'contact')),
-            owner_id INTEGER,
-            phone_number TEXT NOT NULL,
-            type TEXT -- mobile, home, work, etc.
         )
     ''')
 
@@ -70,32 +53,14 @@ def create_tables() -> None:
         )
     ''')
 
-    # SPECIALIZATION
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS Specialization (
-            specialization_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT UNIQUE NOT NULL
-        )
-    ''')
-
-    # TRAINER SPECIALIZATION
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS Trainer_Specialization (
-            trainer_id INTEGER,
-            specialization_id INTEGER,
-            PRIMARY KEY (trainer_id, specialization_id),
-            FOREIGN KEY (trainer_id) REFERENCES Trainer(trainer_id),
-            FOREIGN KEY (specialization_id) REFERENCES Specialization(specialization_id)
-        )
-    ''')
-
-    # CONTACT
+    # CONTACT (Updated: added 'phone')
     cur.execute('''
         CREATE TABLE IF NOT EXISTS Contact (
             contact_id INTEGER PRIMARY KEY AUTOINCREMENT,
             person_id INTEGER,
             contact_name TEXT,
             relationship TEXT,
+            phone TEXT,
             FOREIGN KEY (person_id) REFERENCES Person(id)
         )
     ''')
@@ -154,6 +119,25 @@ def create_tables() -> None:
             method TEXT,
             amount REAL,
             FOREIGN KEY (member_id) REFERENCES Member(member_id)
+        )
+    ''')
+
+    # SPECIALIZATION
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS Specialization (
+            specialization_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE NOT NULL
+        )
+    ''')
+
+    # TRAINER SPECIALIZATION
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS Trainer_Specialization (
+            trainer_id INTEGER,
+            specialization_id INTEGER,
+            PRIMARY KEY (trainer_id, specialization_id),
+            FOREIGN KEY (trainer_id) REFERENCES Trainer(trainer_id),
+            FOREIGN KEY (specialization_id) REFERENCES Specialization(specialization_id)
         )
     ''')
 
